@@ -1,5 +1,6 @@
-# Author:: Joshua Sierles <joshua@37signals.com>
+# Author:: Miguel Armas <kuko@canarytek.com>
 #
+# Author:: Joshua Sierles <joshua@37signals.com>
 # Author:: Joshua Timberman <joshua@opscode.com>
 # Author:: Nathan Haneysmith <nathan@opscode.com>
 # Author:: Seth Chisamore <schisamo@opscode.com>
@@ -8,6 +9,7 @@
 #
 # Copyright 2009, 37signals
 # Copyright 2009-2013, Opscode, Inc
+# Copyright 2013, CanaryTek
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -62,6 +64,8 @@ default['nagios']['ssl_cert_file'] = "#{node['nagios']['conf_dir']}/certificates
 default['nagios']['ssl_cert_key']  = "#{node['nagios']['conf_dir']}/certificates/nagios-server.pem"
 default['nagios']['ssl_req']       = '/C=US/ST=Several/L=Locality/O=Example/OU=Operations/' +
   "CN=#{node['nagios']['server_name']}/emailAddress=ops@#{node['nagios']['server_name']}"
+# Nagios admin users
+default["nagios"]["admins"] = [ "nagiosadmin", "noc"]
 
 # nagios server name and webserver vname.  this can be changed to allow for the installation of icinga
 default['nagios']['server']['name']  = 'nagios'
@@ -76,6 +80,13 @@ default['nagios']['server']['src_dir'] = 'nagios'
 # for server from packages installation
 default['nagios']['server']['packages'] = %w[nagios3 nagios-nrpe-plugin nagios-images]
 
+# Node attribute to use as host name in nagios
+default['nagios']['host_name_attribute']       = 'hostname'
+# Search to use in server to find hosts to include in nagios
+default['nagios']['host_search']    = 'hostname:*'
+# Skip hosts with this role
+default['nagios']['skip_role']      = 'skip_nagios'
+
 default['nagios']['notifications_enabled']     = 0
 default['nagios']['check_external_commands']   = true
 default['nagios']['default_contact_groups']    = %w{admins}
@@ -84,7 +95,7 @@ default['nagios']['sysadmin_sms_email']        = 'root@localhost'
 default['nagios']['server_auth_method']        = 'htauth'
 default['nagios']['users_databag']             = 'users'
 default['nagios']['users_databag_group']       = 'sysadmin'
-default['nagios']['host_name_attribute']       = 'hostname'
+default['nagios']['contact_groups']            = "admins"
 default['nagios']['regexp_matching']           = 0
 default['nagios']['large_installation_tweaks'] = 0
 

@@ -4,6 +4,16 @@ nagios Cookbook
 
 Installs and configures Nagios server and NRPE client. Chef nodes are automatically discovered using search, and Nagios host groups are created based on Chef roles and optionally environments as well. NRPE client commands can be defined by using a LWRP, and Nagios service checks applied to hostgroups using definitions in data bag items.
 
+Changes
+-------
+
+Changes over the "offcial" nagios cookbook
+
+* Exclude from nagios any host with the role default['nagios']['skip_role']
+* Use the attribute default['nagios']['host_search'] to define the search to find nodes to include in Nagios
+* Use :chef\_environment in databags to define an object only in a given environment ('ALL'  to define it in all environments)
+* Only add contact to nagios admins if it belongs to the sysadmins group (we may have users with access to only their hosts)
+* Disable active checks on any host with the role "private". Useful if nagios clients are not reachable from nagios server. You can still use nsca alerts
 
 Requirements
 ------------

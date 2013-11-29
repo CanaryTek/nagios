@@ -26,7 +26,11 @@ define host {
   elsif !node['cloud'].nil? && !n['cloud'].nil? && n['cloud']['provider'] != node['cloud']['provider']
     ip = n['cloud']['public_ipv4'].include?('.') ? n['cloud']['public_ipv4'] : n['ipaddress']
   else
-    ip = n['ipaddress']
+    if n['ipaddress'].nil?
+      ip = n['teide']['ip']
+    else
+      ip = n['ipaddress']
+    end
   end %>
   address <%= ip %>
   host_name <%= node['nagios']['server']['normalize_hostname'] ? n[node['nagios']['host_name_attribute']].downcase : n[node['nagios']['host_name_attribute']] %>
@@ -43,6 +47,16 @@ define host {
   hostgroups all,<%= (n['roles'] & @hostgroups).sort.join(",") %>,<%= n['os'] %>
   <% end -%>
   <% end -%>
+  <% if !n.run_list.roles.nil? && n.run_list.roles.include?("private") -%>
+  # Disable active host checks if in role "private"
+  active_checks_enabled 0
+  <% end -%>
+  <% if !n['nagios'].nil? && !n['nagios']['contact_groups'].nil? -%>
+  contact_groups <%= n['nagios']['contact_groups'] %>
+  <% end -%>
+  <% if !n['nagios'].nil? && !n['nagios']['contacts'].nil? -%>
+  contacts <%= n['nagios']['contacts'] %>
+  <% end -%>
 }
 <% end -%>
 <% end -%>
@@ -52,9 +66,17 @@ define host {
 define host {
   use server
   address <%= n['address'] %>
+  <% if n.has_key?("nagios_name") -%>
+  host_name <%= n['nagios_name'] %>
+  <% else -%>
   host_name <%= node['nagios']['server']['normalize_hostname'] ? n['id'].downcase : n['id'] %>
+  <% end -%>
   hostgroups all,<%= n['hostgroups'].join(",") %>
   notifications_enabled <%= n['notifications'] %>
+  <% if n['hostgroups'].include?("private") -%>
+  # Disable active host checks if in role "private"
+  active_checks_enabled 0
+  <% end -%>
 }
 <% end -%>
 <% end -%>

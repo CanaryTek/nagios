@@ -1,4 +1,6 @@
 #
+# Author:: Miguel Armas <kuko@canarytek.com>
+#
 # Author:: Joshua Sierles <joshua@37signals.com>
 # Author:: Joshua Timberman <joshua@opscode.com>
 # Author:: Nathan Haneysmith <nathan@opscode.com>
@@ -8,6 +10,7 @@
 #
 # Copyright 2009, 37signals
 # Copyright 2009-2013, Opscode, Inc
+# Copyright 2013, CanaryTek
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -100,15 +103,33 @@ end
 # install nagios service either from source of package
 include_recipe "nagios::server_#{node['nagios']['server']['install_method']}"
 
+## Change to side.php to disable side options if user is not admin
+# FIXME: We should have an attribute with the admin users
+template "#{node['nagios']['docroot']}/side.php" do
+  source "side.php.erb"
+  owner node['nagios']['user']
+  group web_group
+  mode 00640
+end
+template "#{node['nagios']['docroot']}/config.inc.php" do
+  source "config.inc.php.erb"
+  owner node['nagios']['user']
+  group web_group
+  mode 00640
+  variables(
+      :admin_users_regex => "/#{node["nagios"]["admins"].map{ |n| "^#{n}$" }.join("|")}/"
+    )
+end
+
 # find nodes to monitor.  Search in all environments if multi_environment_monitoring is enabled
 Chef::Log.info('Beginning search for nodes.  This may take some time depending on your node count')
 nodes = []
 hostgroups = []
 
 if node['nagios']['multi_environment_monitoring']
-  nodes = search(:node, 'hostname:*')
+  nodes = search(:node, "#{node['nagios']['host_search']} AND NOT role:#{node['nagios']['skip_role']}")
 else
-  nodes = search(:node, "hostname:* AND chef_environment:#{node.chef_environment}")
+  nodes = search(:node, "#{node['nagios']['host_search']} AND chef_environment:#{node.chef_environment} AND NOT role:#{node['nagios']['skip_role']}")
 end
 
 if nodes.empty?
@@ -121,9 +142,9 @@ nodes.sort! { |a, b| a.name <=> b.name }
 
 # maps nodes into nagios hostgroups
 service_hosts = {}
-search(:role, '*:*') do |r|
+search(:role, "NOT name:skip_nagios") do |r|
   hostgroups << r.name
-  nodes.select { |n| n['roles'].include?(r.name) }.each do |n|
+  nodes.select { |n| n.has_key?('roles') and n['roles'].include?(r.name) }.each do |n|
     service_hosts[r.name] = n[node['nagios']['host_name_attribute']]
   end
 end
@@ -140,24 +161,72 @@ end
 
 # Add all unique platforms to the array of hostgroups
 nodes.each do |n|
-  hostgroups << n['os'] unless hostgroups.include?(n['os'])
+  hostgroups << n['os'] unless n['os'].nil? or hostgroups.include?(n['os'])
 end
 
 nagios_bags = NagiosDataBags.new
-services = nagios_bags.get('nagios_services')
-servicegroups = nagios_bags.get('nagios_servicegroups')
 templates = nagios_bags.get('nagios_templates')
 eventhandlers = nagios_bags.get('nagios_eventhandlers')
-unmanaged_hosts = nagios_bags.get('nagios_unmanagedhosts')
+#unmanaged_hosts = nagios_bags.get('nagios_unmanagedhosts')
 serviceescalations = nagios_bags.get('nagios_serviceescalations')
 contacts = nagios_bags.get('nagios_contacts')
 contactgroups = nagios_bags.get('nagios_contactgroups')
 servicedependencies = nagios_bags.get('nagios_servicedependencies')
 
+# load Nagios servicegroups from the nagios_servicegroups data bag
+begin
+  Chef::Log.info("Search for nagios_servicegroups with query chef_environment:#{node.chef_environment}")
+  if node['nagios']['multi_environment_monitoring']
+    servicegroups = search(:nagios_servicegroups, '*:*')
+  else
+    servicegroups = search(:nagios_servicegroups, "chef_environment:ALL OR chef_environment:#{node.chef_environment}")
+  end
+rescue Net::HTTPServerException
+  Chef::Log.info("Could not search for nagios_servicegroups data bag items, skipping dynamically generated servicegroups")
+end
+
+if servicegroups.nil? || servicegroups.empty?
+  Chef::Log.info("No servicesgroups returned from data bag search.")
+  servicegroups = Array.new
+end
+
+# load Nagios services from the nagios_services data bag
+begin
+  Chef::Log.info("Search for nagios_services with query chef_environment:#{node.chef_environment}")
+  if node['nagios']['multi_environment_monitoring']
+    services = search(:nagios_services, '*:*')
+  else
+    services = search(:nagios_services, "chef_environment:ALL OR chef_environment:#{node.chef_environment}")
+  end
+rescue Net::HTTPServerException
+  Chef::Log.info("Could not search for nagios_service data bag items, skipping dynamically generated service checks")
+end
+
+if services.nil? || services.empty?
+  Chef::Log.info("No services returned from data bag search.")
+  services = Array.new
+end
+
+# find all unique hostgroups in the nagios_unmanagedhosts data bag
+begin
+  Chef::Log.info("Search for nagios_unmanagedhosts with query chef_environment:#{node.chef_environment}")
+  if node['nagios']['multi_environment_monitoring']
+    unmanaged_hosts = search(:nagios_unmanagedhosts, '*:*')
+  else
+    unmanaged_hosts = search(:nagios_unmanagedhosts, "chef_environment:#{node.chef_environment}")
+  end
+rescue Net::HTTPServerException
+  Chef::Log.info("Search for nagios_unmanagedhosts data bag failed, so we'll just move on.")
+end
+
 # Add unmanaged host hostgroups to the hostgroups array if they don't already exist
-unmanaged_hosts.each do |host|
-  host['hostgroups'].each do |hg|
-    hostgroups << hg unless hostgroups.include?(hg)
+if unmanaged_hosts.nil? || unmanaged_hosts.empty?
+  Chef::Log.info("No unmanaged hosts returned from data bag search.")
+else
+  unmanaged_hosts.each do |host|
+    host['hostgroups'].each do |hg|
+      hostgroups << hg unless hostgroups.include?(hg)
+    end
   end
 end
 
@@ -169,11 +238,11 @@ if nagios_bags.bag_list.include?('nagios_hostgroups')
     hostgroup_list << hg['hostgroup_name']
     temp_hostgroup_array = Array.new
     if node['nagios']['multi_environment_monitoring']
-      search(:node, hg['search_query']) do |n|
+      search(:node, "#{hg['search_query']} AND NOT role:#{node['nagios']['skip_role']}") do |n|
         temp_hostgroup_array << n[node['nagios']['host_name_attribute']]
       end
     else
-      search(:node, "#{hg['search_query']} AND chef_environment:#{node.chef_environment}") do |n|
+      search(:node, "#{hg['search_query']} AND chef_environment:#{node.chef_environment} AND NOT role:#{node['nagios']['skip_role']}") do |n|
         temp_hostgroup_array << n[node['nagios']['host_name_attribute']]
       end
     end
@@ -184,7 +253,9 @@ end
 # pick up base contacts
 members = []
 sysadmins.each do |s|
-  members << s['id']
+  if s[:groups].include?("sysadmin")
+    members << s['id']
+  end
 end
 
 # add additional contacts including pagerduty to the contacts
