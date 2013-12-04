@@ -7,13 +7,14 @@ Installs and configures Nagios server and NRPE client. Chef nodes are automatica
 Changes
 -------
 
-Changes over the "offcial" nagios cookbook
+Changes over the "official" nagios cookbook
 
 * Exclude from nagios any host with the role default['nagios']['skip_role']
 * Use the attribute default['nagios']['host_search'] to define the search to find nodes to include in Nagios
 * Use :chef\_environment in databags to define an object only in a given environment ('ALL'  to define it in all environments)
 * Only add contact to nagios admins if it belongs to the sysadmins group (we may have users with access to only their hosts)
 * Disable active checks on any host with the role "private". Useful if nagios clients are not reachable from nagios server. You can still use nsca alerts
+* Define roles not\_exposed and not\_ssh\_exposed to skip all and SSH related security checks
 
 Requirements
 ------------

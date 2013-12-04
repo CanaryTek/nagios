@@ -149,6 +149,8 @@ search(:role, "NOT name:skip_nagios") do |r|
   end
 end
 
+log "SERVICEHOSTS: #{service_hosts.inspect}"
+
 # if using multi environment monitoring add all environments to the array of hostgroups
 if node['nagios']['multi_environment_monitoring']
   search(:environment, '*:*') do |e|
