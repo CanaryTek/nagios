@@ -15,6 +15,7 @@ Changes over the "official" nagios cookbook
 * Only add contact to nagios admins if it belongs to the sysadmins group (we may have users with access to only their hosts)
 * Disable active checks on any host with the role "private". Useful if nagios clients are not reachable from nagios server. You can still use nsca alerts
 * Define roles not\_exposed and not\_ssh\_exposed to skip all and SSH related security checks
+* If an attribute node['nagios']['override_ip'] exists, use it instead if the ohai detected ipaddress for the nagios node definition
 
 Requirements
 ------------
