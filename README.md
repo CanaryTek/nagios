@@ -16,6 +16,7 @@ Changes over the "official" nagios cookbook
 * Disable active checks on any host with the role "private". Useful if nagios clients are not reachable from nagios server. You can still use nsca alerts
 * Define roles not\_exposed and not\_ssh\_exposed to skip all and SSH related security checks
 * If an attribute node['nagios']['override_ip'] exists, use it instead if the ohai detected ipaddress for the nagios node definition
+* Add attribute node['nagios']['client']['skip_epel'] to skip epel cookbook dependency, because you may have a local epel mirror...
 
 Requirements
 ------------

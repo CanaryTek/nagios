@@ -22,8 +22,10 @@
 # nrpe packages are available in EPEL on rhel / fedora platforms
 # fedora 17 and later don't require epel
 if platform_family?('rhel', 'fedora')
-  unless platform?('fedora') && node['platform_version'] < 17
-    include_recipe 'yum::epel'
+  unless platform?('fedora') && node['platform_version'] < 17 
+    unless node['nagios']['client']['skip_epel']
+      include_recipe 'yum::epel'
+    end
   end
 end
 

@@ -40,8 +40,8 @@ when 'debian'
     default['nagios']['nrpe']['service_name']      = 'nrpe'
   end
 when 'rhel', 'fedora'
-  default['nagios']['client']['install_method']  = 'source'
-  default['nagios']['nrpe']['pidfile']           = '/var/run/nrpe.pid'
+  default['nagios']['client']['install_method']  = 'package'
+  default['nagios']['nrpe']['pidfile']           = '/var/run/nrpe/nrpe.pid'
   default['nagios']['nrpe']['packages']          = %w{ nrpe nagios-plugins-disk nagios-plugins-load nagios-plugins-procs nagios-plugins-users }
   if node['kernel']['machine'] == 'i686'
     default['nagios']['nrpe']['home']            = '/usr/lib/nagios'
