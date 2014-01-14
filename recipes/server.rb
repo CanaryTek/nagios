@@ -215,22 +215,24 @@ begin
   if node['nagios']['multi_environment_monitoring']
     unmanaged_hosts = search(:nagios_unmanagedhosts, '*:*')
   else
-    unmanaged_hosts = search(:nagios_unmanagedhosts, "chef_environment:#{node.chef_environment}")
+    unmanaged_hosts = search(:nagios_unmanagedhosts, "chef_environment:#{node.chef_environment} OR chef_environment:ALL")
   end
 rescue Net::HTTPServerException
   Chef::Log.info("Search for nagios_unmanagedhosts data bag failed, so we'll just move on.")
 end
 
 # Add unmanaged host hostgroups to the hostgroups array if they don't already exist
-if unmanaged_hosts.nil? || unmanaged_hosts.empty?
-  Chef::Log.info("No unmanaged hosts returned from data bag search.")
-else
-  unmanaged_hosts.each do |host|
-    host['hostgroups'].each do |hg|
-      hostgroups << hg unless hostgroups.include?(hg)
-    end
-  end
-end
+# Kuko: Removed this because it can cause unexpected problems: If you use search based hostgroups and this, the hostgroups will 
+# be defined twice. If you use unmanagedhosts for hosts, define hostgroups also un the hostgroups databag
+#if unmanaged_hosts.nil? || unmanaged_hosts.empty?
+#  Chef::Log.info("No unmanaged hosts returned from data bag search.")
+#else
+#  unmanaged_hosts.each do |host|
+#    host['hostgroups'].each do |hg|
+#      hostgroups << hg unless hostgroups.include?(hg)
+#    end
+#  end
+#end
 
 # Load search defined Nagios hostgroups from the nagios_hostgroups data bag and find nodes
 hostgroup_nodes = {}
