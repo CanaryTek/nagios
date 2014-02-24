@@ -149,8 +149,6 @@ search(:role, "NOT name:skip_nagios") do |r|
   end
 end
 
-log "SERVICEHOSTS: #{service_hosts.inspect}"
-
 # if using multi environment monitoring add all environments to the array of hostgroups
 if node['nagios']['multi_environment_monitoring']
   search(:environment, '*:*') do |e|
@@ -196,17 +194,33 @@ end
 begin
   Chef::Log.info("Search for nagios_services with query chef_environment:#{node.chef_environment}")
   if node['nagios']['multi_environment_monitoring']
-    services = search(:nagios_services, '*:*')
+    databag_services = search(:nagios_services, '*:*')
   else
-    services = search(:nagios_services, "chef_environment:ALL OR chef_environment:#{node.chef_environment}")
+    databag_services = search(:nagios_services, "chef_environment:ALL OR chef_environment:#{node.chef_environment}")
   end
 rescue Net::HTTPServerException
   Chef::Log.info("Could not search for nagios_service data bag items, skipping dynamically generated service checks")
 end
 
-if services.nil? || services.empty?
+if databag_services.nil? || databag_services.empty?
   Chef::Log.info("No services returned from data bag search.")
-  services = Array.new
+  databag_services = Array.new
+end
+
+# load services defined in hosts
+if node['nagios']['multi_environment_monitoring']
+  host_services = search(:node, "#{node['nagios']['host_search']} AND nagios_services:* AND NOT role:#{node['nagios']['skip_role']}")
+else
+  host_services = search(:node, "#{node['nagios']['host_search']} AND nagios_services:* AND chef_environment:#{node.chef_environment} AND NOT role:#{node['nagios']['skip_role']}")
+end
+
+## Add host defined services
+services=databag_services.map{ |e| e.raw_data}
+
+host_services.each do |n|
+  n['nagios']['services'].each do |k,v|
+    services << v
+  end
 end
 
 # find all unique hostgroups in the nagios_unmanagedhosts data bag
@@ -339,6 +353,7 @@ end
 nagios_conf 'services' do
   variables(:service_hosts => service_hosts,
             :services => services,
+            :host_services => host_services,
             :search_hostgroups => hostgroup_list,
             :hostgroups => hostgroups)
 end

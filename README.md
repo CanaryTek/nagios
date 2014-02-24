@@ -492,6 +492,39 @@ nagios_nrpecheck "check_load" do
 end
 ```
 
+### service
+
+Define a service check directly in a recipe.
+
+What it does is create a hash of services in `node['nagios']['services']`, and the nagios server read that attribute from all hosts to add them to the services array
+
+#### Actions
+
+- `:add` add the service definition to the host. Default action.
+- `:remove` removes the service definition 
+
+#### Attribute Parameters
+
+It support the same options as the databag defined services.
+
+If you define `host_name` the service will be defined for that host. If it's omitted, the service will be defined for the host running the recipe.
+
+#### Examples
+
+```ruby
+# Use LWRP to check web of www.test.none
+nagios_service "http-www.test.none" do
+    use_existing_command "check_http!www.test.none"
+end
+```
+
+```ruby
+# Remove the previous service
+nagios_service "http-www.test.none" do
+    use_existing_command "check_http!www.test.none"
+    action :remove
+end
+```
 
 Usage
 -----
