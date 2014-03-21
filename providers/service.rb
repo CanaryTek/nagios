@@ -26,14 +26,13 @@ end
 action :add do
   args=Hash.new()
 
-  [:id,:host_name].each do |n|
-    args[n]=new_resource.send(n)
-  end
-
   # Set defaults
-  args[:host_name] ||= node['nagios_name']
+  args[:id] = new_resource.id
   args[:description] ||= args[:id]
   args[:service_template] ||= "default-service"
+  unless new_resource.hostgroup_name
+    args[:host_name] = new_resource.host_name ? new_resource.host_name : node['nagios_name'] 
+  end
 
   # Handle optional arguments
   Chef::Resource::NagiosService::ARGS.each do |arg|
