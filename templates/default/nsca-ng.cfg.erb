@@ -1,0 +1,32 @@
+# Managed by Chef. DO NOT EDIT!!!
+
+# Nagios cmd file
+command_file = "/var/lib/nagios3/rw/nagios.cmd"
+
+#
+# These configuration settings are optional.
+#
+#   listen = "monitoring.example.com:5668"  # Default: "*".
+#   pid_file = "/var/run/nsca-ng.pid"       # Default: create no PID file.
+#   temp_directory = "/dev/shm"             # Default: "/tmp".
+#   tls_ciphers = "PSK-AES256-CBC-SHA"      # Default: see nsca-ng.cfg(5).
+#   chroot = "/usr/local/nagios/var"        # Default: don't chroot(2).
+#   user = "nagios"                         # Default: don't switch user.
+#   log_level = 2                           # Default: 3.
+#   max_command_size = 65536                # Default: 16384.
+#   max_queue_size = 128                    # Default: 1024.
+#   timeout = 15.0                          # Default: 60.0.
+#
+
+user = "nagios"
+
+authorize "*" {
+  password = "<%= node["nagios"]["shared-key"] %>"
+  hosts = ".*"
+  services = ".*"
+}
+
+# Other files can be included.  If a directory is specified, all "*.cfg" and
+# "*.conf" files within this directory and all subdirectories are included.
+include(/etc/nsca-ng.d/)
+
