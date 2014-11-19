@@ -26,10 +26,10 @@ attribute :id, :kind_of => String, :name_attribute => true
 attribute :host_name, :kind_of => String
 
 # For some reason, this default definition is not working. Default is also set in provider
-attribute :service_template, :kind_of => String, :default => "default-service"
+#attribute :service_template, :kind_of => String, :default => "default-service"
 
 # Optional args
-ARGS= %w{command_line use_existing_command hostgroup_name active_checks_enabled passive_checks_enabled parallelize_check obsess_over_service check_freshness freshness_threshold notifications_enabled event_handler_enabled flap_detection_enabled failure_prediction_enabled process_perf_data retain_status_information retain_nonstatus_information is_volatile check_period max_check_attempts check_interval retry_interval contacts contact_groups notification_options notification_period notes_url action_url servicegroups}
+ARGS= %w{command_line use_existing_command description service_template hostgroup_name active_checks_enabled passive_checks_enabled parallelize_check obsess_over_service check_freshness freshness_threshold notifications_enabled event_handler_enabled flap_detection_enabled failure_prediction_enabled process_perf_data retain_status_information retain_nonstatus_information is_volatile check_period max_check_attempts check_interval retry_interval contacts contact_groups notification_options notification_period notes_url action_url servicegroups}
 
 ARGS.each do |arg|
   attribute arg.to_sym, :kind_of => String

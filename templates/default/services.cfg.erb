@@ -17,7 +17,7 @@ define service {
   <% #unless service['hostgroup_name'].nil? || !(@hostgroups.include?(service['hostgroup_name']) || @search_hostgroups.include?(service['hostgroup_name']) || service['hostgroup_name'] == "all") -%>
 define service {
   service_description <%= service['description'] || service['id'] %>
-  <% if service.has_key?("host_name") -%>
+  <% if service["host_name"] -%>
   host_name <%= service['host_name'] %>
   <% else -%>
   hostgroup_name <%= service['hostgroup_name'] %>

@@ -24,6 +24,9 @@ default['nagios']['multi_environment_monitoring'] = false
 default['nagios']['user']  = 'nagios'
 default['nagios']['group'] = 'nagios'
 
+# CHANGE THIS!!! Used for nsca-ng authentication
+default['nagios']['shared-key'] = "CHANGEME!"
+
 case node['platform_family']
 when 'debian'
   default['nagios']['plugin_dir'] = '/usr/lib/nagios/plugins'
