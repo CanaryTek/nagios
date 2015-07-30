@@ -80,6 +80,10 @@ define host {
   # Disable active host checks if in role "private"
   active_checks_enabled 0
   <% end -%>
+  <% if n.has_key?("contact_groups") -%>
+  contact_groups <%= n['contact_groups'].join(",") %>
+  <% end -%>
+ 
 }
 <% end -%>
 <% end -%>
