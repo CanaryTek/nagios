@@ -44,6 +44,7 @@ if node.run_list.roles.include?(node['nagios']['server_role'])
 end
 
 mon_host.concat node['nagios']['allowed_hosts'] if node['nagios']['allowed_hosts']
+mon_host.push node['nagios']['nrpe_proxy_internal'] if node['nagios']['nrpe_proxy_internal']
 
 include_recipe "nagios::client_#{node['nagios']['client']['install_method']}"
 

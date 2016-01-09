@@ -26,6 +26,7 @@
 case node['platform_family']
 when 'debian'
   default['nagios']['client']['install_method']  = 'package'
+  default['nagios']['nrpe']['conf_dir']          = '/etc/nagios'
   default['nagios']['nrpe']['pidfile']           = '/var/run/nagios/nrpe.pid'
   default['nagios']['nrpe']['home']              = '/usr/lib/nagios'
   default['nagios']['nrpe']['packages']          = %w{ nagios-nrpe-server nagios-plugins nagios-plugins-basic nagios-plugins-standard }
@@ -41,6 +42,20 @@ when 'debian'
   end
 when 'rhel', 'fedora'
   default['nagios']['client']['install_method']  = 'package'
+  default['nagios']['nrpe']['conf_dir']          = '/etc/nagios'
+  default['nagios']['nrpe']['pidfile']           = '/var/run/nrpe/nrpe.pid'
+  default['nagios']['nrpe']['packages']          = %w{ nrpe nagios-plugins-disk nagios-plugins-load nagios-plugins-procs nagios-plugins-users }
+  if node['kernel']['machine'] == 'i686'
+    default['nagios']['nrpe']['home']            = '/usr/lib/nagios'
+    default['nagios']['nrpe']['ssl_lib_dir']     = '/usr/lib'
+  else
+    default['nagios']['nrpe']['home']            = '/usr/lib64/nagios'
+    default['nagios']['nrpe']['ssl_lib_dir']     = '/usr/lib64'
+  end
+  default['nagios']['nrpe']['service_name']      = 'nrpe'
+when 'suse'
+  default['nagios']['client']['install_method']  = 'package'
+  default['nagios']['nrpe']['conf_dir']          = '/etc'
   default['nagios']['nrpe']['pidfile']           = '/var/run/nrpe/nrpe.pid'
   default['nagios']['nrpe']['packages']          = %w{ nrpe nagios-plugins-disk nagios-plugins-load nagios-plugins-procs nagios-plugins-users }
   if node['kernel']['machine'] == 'i686'
@@ -53,14 +68,15 @@ when 'rhel', 'fedora'
   default['nagios']['nrpe']['service_name']      = 'nrpe'
 else
   default['nagios']['client']['install_method']  = 'source'
+  default['nagios']['nrpe']['conf_dir']          = '/etc/nagios'
   default['nagios']['nrpe']['pidfile']           = '/var/run/nrpe.pid'
   default['nagios']['nrpe']['home']              = '/usr/lib/nagios'
   default['nagios']['nrpe']['ssl_lib_dir']       = '/usr/lib'
   default['nagios']['nrpe']['service_name']      = 'nrpe'
 end
 
-default['nagios']['nrpe']['conf_dir']          = '/etc/nagios'
-default['nagios']['nrpe']['dont_blame_nrpe']   = 0
+#default['nagios']['nrpe']['dont_blame_nrpe']   = 0
+default['nagios']['nrpe']['dont_blame_nrpe']   = 1
 default['nagios']['nrpe']['command_timeout']   = 60
 
 # for plugin from source installation

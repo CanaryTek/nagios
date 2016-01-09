@@ -45,7 +45,7 @@ nsca_version = node['nagios']['nsca']['version']
 
 remote_file "#{Chef::Config[:file_cache_path]}/nsca-#{nsca_version}.tar.gz" do
   source "#{node['nagios']['nsca']['url']}/nsca-#{nsca_version}.tar.gz"
-  checksum node['nagios']['nsca']['checksum']
+  #checksum node['nagios']['nsca']['checksum']
   action :create_if_missing
 end
 

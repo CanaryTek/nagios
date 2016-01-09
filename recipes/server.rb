@@ -63,7 +63,6 @@ rescue Net::HTTPServerException
   Chef::Log.fatal("Could not find appropriate items in the \"#{node['nagios']['users_databag']}\" databag.  Check to make sure the databag exists and if you have set the \"users_databag_group\" that users in that group exist")
   raise 'Could not find appropriate items in the "users" databag.  Check to make sure there is a users databag and if you have set the "users_databag_group" that users in that group exist'
 end
-Chef::Log.fatal("KKKKKKK sysadmins: #{sysadmins.join(',')}")
 
 case node['nagios']['server_auth_method']
 when 'openid'
@@ -139,7 +138,7 @@ if nodes.empty?
 end
 
 # Sort by name to provide stable ordering
-nodes.sort! { |a, b| a.name <=> b.name }
+nodes.sort.uniq.sort! { |a, b| a.name <=> b.name }
 
 # maps nodes into nagios hostgroups
 service_hosts = {}
@@ -162,6 +161,7 @@ end
 
 # Add all unique platforms to the array of hostgroups
 nodes.each do |n|
+  Chef::Log.debug(n["nagios_name"])
   hostgroups << n['os'] unless n['os'].nil? or hostgroups.include?(n['os'])
 end
 

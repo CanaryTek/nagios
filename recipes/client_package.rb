@@ -24,7 +24,7 @@
 if platform_family?('rhel', 'fedora')
   unless platform?('fedora') && node['platform_version'] < 17 
     unless node['nagios']['client']['skip_epel']
-      include_recipe 'yum::epel'
+      include_recipe 'yum-epel'
     end
   end
 end
