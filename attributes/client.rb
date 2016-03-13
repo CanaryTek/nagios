@@ -26,6 +26,8 @@
 case node['platform_family']
 when 'debian'
   default['nagios']['client']['install_method']  = 'package'
+  default['nagios']['nrpe']['user']              = 'nagios'
+  default['nagios']['nrpe']['group']              = 'nagios'
   default['nagios']['nrpe']['conf_dir']          = '/etc/nagios'
   default['nagios']['nrpe']['pidfile']           = '/var/run/nagios/nrpe.pid'
   default['nagios']['nrpe']['home']              = '/usr/lib/nagios'
@@ -41,8 +43,16 @@ when 'debian'
     default['nagios']['nrpe']['service_name']      = 'nrpe'
   end
 when 'rhel', 'fedora'
+  if node['platform_version'].to_i >= 7
+    default['nagios']['nrpe']['conf_dir']          = '/etc'
+    default['nagios']['nrpe']['user']              = 'nrpe'
+    default['nagios']['nrpe']['group']             = 'nrpe'
+  else
+    default['nagios']['nrpe']['conf_dir']          = '/etc/nagios'
+    default['nagios']['nrpe']['user']              = 'nagios'
+    default['nagios']['nrpe']['group']             = 'nagios'
+  end
   default['nagios']['client']['install_method']  = 'package'
-  default['nagios']['nrpe']['conf_dir']          = '/etc/nagios'
   default['nagios']['nrpe']['pidfile']           = '/var/run/nrpe/nrpe.pid'
   default['nagios']['nrpe']['packages']          = %w{ nrpe nagios-plugins-disk nagios-plugins-load nagios-plugins-procs nagios-plugins-users }
   if node['kernel']['machine'] == 'i686'
@@ -54,6 +64,8 @@ when 'rhel', 'fedora'
   end
   default['nagios']['nrpe']['service_name']      = 'nrpe'
 when 'suse'
+  default['nagios']['nrpe']['user']              = 'nrpe'
+  default['nagios']['nrpe']['group']             = 'nrpe'
   default['nagios']['client']['install_method']  = 'package'
   default['nagios']['nrpe']['conf_dir']          = '/etc'
   default['nagios']['nrpe']['pidfile']           = '/var/run/nrpe/nrpe.pid'
@@ -67,6 +79,8 @@ when 'suse'
   end
   default['nagios']['nrpe']['service_name']      = 'nrpe'
 else
+  default['nagios']['nrpe']['user']              = 'nagios'
+  default['nagios']['nrpe']['group']             = 'nagios'
   default['nagios']['client']['install_method']  = 'source'
   default['nagios']['nrpe']['conf_dir']          = '/etc/nagios'
   default['nagios']['nrpe']['pidfile']           = '/var/run/nrpe.pid'
